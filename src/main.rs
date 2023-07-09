@@ -13,55 +13,21 @@ fn main() {
 
 fn compute_dynamic_fare(distance: f32) -> Result<f64, FareCalculationError> {
     if distance == 0.0 {
-        return Err(FareCalculationError::new(
-            DistanceCalculatorErrorReason::InvalidInput(distance),
-        ));
+        return Err(FareCalculationError::InvalidInput {
+            input_distance: distance,
+        });
     }
     Ok((distance as f64) * 3.0)
 }
 
-use core::fmt::{Debug, Display};
-use std::fmt::Formatter;
-pub trait Error: Debug + Display {
-    fn source(&self) -> Option<&(dyn Error + 'static)>;
-}
+use thiserror::Error;
 
-#[derive(Debug)]
-enum DistanceCalculatorErrorReason {
-    // pass the distance that was used as input to this enum variant.
-    InvalidInput(f32),
-    // store the status code within the enum value.
+#[derive(Error, Debug)]
+pub enum FareCalculationError {
+    #[error(
+        "invalid input. distance must be greater than zero. Provided value {input_distance:?}"
+    )]
+    InvalidInput { input_distance: f32 },
+    #[error("Unable to compute fare. Service unreachable with status `{0}`.")]
     WeatherServiceUnreachable(i32),
-}
-
-#[derive(Debug)]
-struct FareCalculationError {
-    reason: DistanceCalculatorErrorReason,
-}
-
-impl Display for FareCalculationError {
-    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
-        match self.reason {
-            DistanceCalculatorErrorReason::InvalidInput(distance) => {
-                write!(
-                    f,
-                    "invalid input. distance must be greater than zero. Provided value {}.",
-                    distance
-                )
-            }
-            DistanceCalculatorErrorReason::WeatherServiceUnreachable(status) => {
-                write!(
-                    f,
-                    "Unable to compute fare. Service unreachable with status {}.",
-                    status
-                )
-            }
-        }
-    }
-}
-
-impl FareCalculationError {
-    fn new(val: DistanceCalculatorErrorReason) -> Self {
-        Self { reason: val }
-    }
 }
