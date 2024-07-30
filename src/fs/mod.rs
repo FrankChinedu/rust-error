@@ -1,4 +1,5 @@
-use crate::Result;
+pub mod error;
+use crate::{Error, Result};
 
 pub fn list_files(path: &str) -> Result<Vec<String>> {
     let files: Vec<String> = std::fs::read_dir(path)?
@@ -8,7 +9,7 @@ pub fn list_files(path: &str) -> Result<Vec<String>> {
         .collect();
 
     if files.is_empty() {
-        return Err("Cannot list empty folder".into());
+        return Err(Error::Fs(error::Error::FsCantListEmptyFolder));
     }
     Ok(files)
 }
