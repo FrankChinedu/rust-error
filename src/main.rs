@@ -1,33 +1,17 @@
-fn main() {
-    let distance: f32 = 0.0;
-    let res = compute_dynamic_fare(distance);
-    match res {
-        Ok(fare) => {
-            println!("fare computed  = {} ", fare)
-        }
-        Err(msg) => {
-            println!("error computing fare : {}", msg)
-        }
-    }
+pub type Result<T> = core::result::Result<T, Error>;
+pub type Error = Box<dyn std::error::Error>;
+
+fn main() -> Result<()> {
+    let files = list_files(".")?;
+    println!("{files:#?}");
+    Ok(())
 }
 
-fn compute_dynamic_fare(distance: f32) -> Result<f64, FareCalculationError> {
-    if distance == 0.0 {
-        return Err(FareCalculationError::InvalidInput {
-            input_distance: distance,
-        });
-    }
-    Ok((distance as f64) * 3.0)
-}
-
-use thiserror::Error;
-
-#[derive(Error, Debug)]
-pub enum FareCalculationError {
-    #[error(
-        "invalid input. distance must be greater than zero. Provided value {input_distance:?}"
-    )]
-    InvalidInput { input_distance: f32 },
-    #[error("Unable to compute fare. Service unreachable with status `{0}`.")]
-    WeatherServiceUnreachable(i32),
+fn list_files(path: &str) -> Result<Vec<String>> {
+    let files = std::fs::read_dir(path)?
+        .filter_map(|re| re.ok())
+        .filter(|e| e.file_type().map(|ft| ft.is_file()).unwrap_or(false))
+        .filter_map(|e| e.file_name().into_string().ok())
+        .collect();
+    Ok(files)
 }
